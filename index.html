@@ -1,0 +1,63 @@
+<!DOCTYPE html> 
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login with Gmail and Facebook</title>
+    <script type="module" src="https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js"></script>
+    <script type="module" src="https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js"></script>
+</head>
+<body>
+    <h1>Login with Gmail and Facebook</h1>
+    <button id="loginBtnGmail">Login with Gmail</button>
+    <button id="loginBtnFacebook">Login with Facebook</button>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
+        import { getAuth, GoogleAuthProvider, FacebookAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyC9khdafWDfBKOV2baaqucQJDWYqcykdeM",
+            authDomain: "email-login-aa2e7.firebaseapp.com",
+            projectId: "email-login-aa2e7",
+            storageBucket: "email-login-aa2e7.appspot.com",
+            messagingSenderId: "574147870776",
+            appId: "1:574147870776:web:c4c5228e6535c4a3e9a6cd"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        const loginBtnGmail = document.getElementById("loginBtnGmail");
+        const loginBtnFacebook = document.getElementById("loginBtnFacebook");
+
+        // Gmail login
+        loginBtnGmail.addEventListener("click", async () => {
+            const provider = new GoogleAuthProvider();
+            provider.setCustomParameters({
+                prompt: 'select_account' 
+            });
+
+            try {
+                const result = await signInWithPopup(auth, provider);
+                window.location.href = "welcome.html";  // Redirect on success
+            } catch (error) {
+                console.error("Error during Gmail login:", error.message);
+            }
+        });
+
+        // Facebook login
+        loginBtnFacebook.addEventListener("click", async () => {
+            const provider = new FacebookAuthProvider();
+
+            try {
+                const result = await signInWithPopup(auth, provider);
+                window.location.href = "welcome.html";  // Redirect on success
+            } catch (error) {
+                console.error("Error during Facebook login:", error.message);
+            }
+        });
+    </script>
+</body>
+</html>
