@@ -14,7 +14,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
-        import { getAuth, GoogleAuthProvider, FacebookAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
+        import { getAuth, GoogleAuthProvider, FacebookAuthProvider, signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyC9khdafWDfBKOV2baaqucQJDWYqcykdeM",
@@ -32,6 +32,14 @@
         const loginBtnGmail = document.getElementById("loginBtnGmail");
         const loginBtnFacebook = document.getElementById("loginBtnFacebook");
 
+        // Firebase Auth State Listener
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                console.log("User is logged in:", user);
+                window.location.href = "welcome.html"; // Redirect after successful login
+            }
+        });
+
         // Gmail login
         loginBtnGmail.addEventListener("click", async () => {
             const provider = new GoogleAuthProvider();
@@ -45,7 +53,7 @@
                 window.location.href = "welcome.html";  // Redirect on success
             } catch (error) {
                 console.error("Error during Gmail login:", error.message);
-                alert("Error during Gmail login: " + error.message);  // Show alert on error
+                alert("Error during Gmail login: " + error.message);
             }
         });
 
@@ -59,7 +67,7 @@
                 window.location.href = "welcome.html";  // Redirect on success
             } catch (error) {
                 console.error("Error during Facebook login:", error.message);
-                alert("Error during Facebook login: " + error.message);  // Show alert on error
+                alert("Error during Facebook login: " + error.message);
             }
         });
     </script>
