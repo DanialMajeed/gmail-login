@@ -77,22 +77,20 @@
             }
         };
 
-        // This flag ensures that redirection only happens once after login
-        let redirectAlreadyTriggered = false;
-
         // Firebase Auth State Listener
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                // Only redirect if we're not on the welcome page and if redirection hasn't happened yet
-                if (!redirectAlreadyTriggered && !window.location.href.includes("welcome.html")) {
-                    redirectAlreadyTriggered = true; // Prevent further redirects
+                // Only redirect if the user is logged in and we haven't already redirected
+                if (!sessionStorage.getItem('redirected')) {
                     console.log("User is logged in, redirecting to welcome.html...");
+                    sessionStorage.setItem('redirected', 'true'); // Mark as redirected
                     setTimeout(() => {
                         window.location.replace("welcome.html");
                     }, 2000); // Add a 2-second delay
                 }
             } else {
                 console.log("No user is logged in.");
+                sessionStorage.removeItem('redirected'); // Reset redirected flag when user is logged out
             }
         });
 
