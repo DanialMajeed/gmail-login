@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login with Gmail, Facebook, and Twitter</title>
+    <title>Login with Gmail and Facebook</title>
     <script type="module" src="https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js"></script>
     <script type="module" src="https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js"></script>
     <style>
@@ -30,10 +30,9 @@
     </style>
 </head>
 <body>
-    <h1>Login with Gmail, Facebook, and Twitter</h1>
+    <h1>Login with Gmail and Facebook</h1>
     <button id="loginBtnGmail">Login with Gmail</button>
     <button id="loginBtnFacebook">Login with Facebook</button>
-    <button id="loginBtnTwitter">Login with Twitter</button>
     <div id="loadingMessage" class="loading">Please wait...</div>
 
     <script type="module">
@@ -42,7 +41,6 @@
             getAuth, 
             GoogleAuthProvider, 
             FacebookAuthProvider, 
-            TwitterAuthProvider, 
             signInWithPopup, 
             onAuthStateChanged 
         } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
@@ -64,7 +62,6 @@
         // DOM elements
         const loginBtnGmail = document.getElementById("loginBtnGmail");
         const loginBtnFacebook = document.getElementById("loginBtnFacebook");
-        const loginBtnTwitter = document.getElementById("loginBtnTwitter");
         const loadingMessage = document.getElementById("loadingMessage");
 
         // Utility function to show/hide loading message
@@ -73,12 +70,10 @@
                 loadingMessage.classList.add("active");
                 loginBtnGmail.disabled = true;
                 loginBtnFacebook.disabled = true;
-                loginBtnTwitter.disabled = true;
             } else {
                 loadingMessage.classList.remove("active");
                 loginBtnGmail.disabled = false;
                 loginBtnFacebook.disabled = false;
-                loginBtnTwitter.disabled = false;
             }
         };
 
@@ -162,22 +157,6 @@
                     console.error("Error during Facebook login:", error);
                     alert("Error during Facebook login: " + error.message);
                 }
-            } finally {
-                setLoading(false);
-            }
-        });
-
-        // Twitter login
-        loginBtnTwitter.addEventListener("click", async () => {
-            const provider = new TwitterAuthProvider();
-            setLoading(true);
-
-            try {
-                const result = await signInWithPopup(auth, provider);
-                console.log("Twitter login success:", result.user);
-            } catch (error) {
-                console.error("Error during Twitter login:", error);
-                alert("Error during Twitter login: " + error.message);
             } finally {
                 setLoading(false);
             }
