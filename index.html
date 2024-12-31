@@ -58,18 +58,41 @@
         });
 
         // Facebook login
-        loginBtnFacebook.addEventListener("click", async () => {
-            const provider = new FacebookAuthProvider();
+       loginBtnFacebook.addEventListener("click", async () => {
+    const provider = new FacebookAuthProvider();
 
-            try {
-                const result = await signInWithPopup(auth, provider);
-                console.log("Facebook login success:", result.user); // Log user info
+    try {
+        const result = await signInWithPopup(auth, provider);
+        console.log("Facebook login success:", result.user); // Log user info
+        window.location.href = "welcome.html";  // Redirect on success
+    } catch (error) {
+        if (error.code === 'auth/account-exists-with-different-credential') {
+            // Fetch the email and credential causing the conflict
+            const email = error.customData.email;
+            const pendingCredential = FacebookAuthProvider.credentialFromError(error);
+
+            // Fetch sign-in methods for the email
+            const signInMethods = await auth.fetchSignInMethodsForEmail(email);
+
+            if (signInMethods.includes('google.com')) {
+                // Ask the user to sign in with Google
+                const googleProvider = new GoogleAuthProvider();
+                const googleResult = await signInWithPopup(auth, googleProvider);
+
+                // Link Facebook credential to the Google account
+                await googleResult.user.linkWithCredential(pendingCredential);
+                console.log("Facebook credential linked with Google account.");
                 window.location.href = "welcome.html";  // Redirect on success
-            } catch (error) {
-                console.error("Error during Facebook login:", error.message);
-                alert("Error during Facebook login: " + error.message);
+            } else {
+                alert("Please use the same provider you used to sign up.");
             }
-        });
+        } else {
+            console.error("Error during Facebook login:", error.message);
+            alert("Error during Facebook login: " + error.message);
+        }
+    }
+});
+
     </script>
 </body>
 </html>
