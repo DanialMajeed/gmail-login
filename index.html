@@ -82,16 +82,21 @@
             }
         };
 
+        // Redirect user function
+        const redirectToWelcomePage = () => {
+            if (!localStorage.getItem('redirected')) {
+                console.log("User is logged in, redirecting to welcome.html...");
+                localStorage.setItem('redirected', 'true');
+                setTimeout(() => {
+                    window.location.replace("welcome.html");
+                }, 2000);
+            }
+        };
+
         // Firebase Auth State Listener
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                if (!localStorage.getItem('redirected')) {
-                    console.log("User is logged in, redirecting to welcome.html...");
-                    localStorage.setItem('redirected', 'true');
-                    setTimeout(() => {
-                        window.location.replace("welcome.html");
-                    }, 2000);
-                }
+                redirectToWelcomePage();
             } else {
                 console.log("No user is logged in.");
                 localStorage.removeItem('redirected');
@@ -108,8 +113,7 @@
             setLoading(true);
 
             try {
-                const result = await signInWithPopup(auth, provider);
-                console.log("Gmail login success:", result.user);
+                await signInWithPopup(auth, provider);
             } catch (error) {
                 console.error("Error during Gmail login:", error);
                 alert("Error during Gmail login: " + error.message);
@@ -124,8 +128,7 @@
             setLoading(true);
 
             try {
-                const result = await signInWithPopup(auth, provider);
-                console.log("Facebook login success:", result.user);
+                await signInWithPopup(auth, provider);
             } catch (error) {
                 if (error.code === 'auth/account-exists-with-different-credential') {
                     const email = error.customData.email;
@@ -140,7 +143,7 @@
 
                         await googleResult.user.linkWithCredential(pendingCredential);
                         console.log("Facebook credential linked with Google account.");
-                        window.location.replace("welcome.html");
+                        redirectToWelcomePage();
                     } else {
                         alert("An account already exists with this email. Use the original provider to log in.");
                     }
@@ -159,8 +162,7 @@
             setLoading(true);
 
             try {
-                const result = await signInWithPopup(auth, provider);
-                console.log("Twitter login success:", result.user);
+                await signInWithPopup(auth, provider);
             } catch (error) {
                 console.error("Error during Twitter login:", error);
                 alert("Error during Twitter login: " + error.message);
