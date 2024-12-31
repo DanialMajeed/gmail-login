@@ -82,20 +82,19 @@
             }
         };
 
-        // Redirect user function
-        const redirectToWelcomePage = () => {
-            console.log("User is logged in, redirecting to welcome.html...");
-            setTimeout(() => {
-                window.location.replace("welcome.html");
-            }, 2000);
-        };
-
         // Firebase Auth State Listener
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                redirectToWelcomePage();
+                if (!localStorage.getItem('redirected')) {
+                    console.log("User is logged in, redirecting to welcome.html...");
+                    localStorage.setItem('redirected', 'true');
+                    setTimeout(() => {
+                        window.location.replace("welcome.html");
+                    }, 2000);
+                }
             } else {
                 console.log("No user is logged in.");
+                localStorage.removeItem('redirected');
             }
         });
 
