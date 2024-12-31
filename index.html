@@ -77,16 +77,19 @@
             }
         };
 
+        // This flag ensures that redirection only happens once after login
+        let redirectAlreadyTriggered = false;
+
         // Firebase Auth State Listener
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                console.log("User is logged in:", user);
-                // Redirect only if not already on the welcome page
-                if (!window.location.href.includes("welcome.html")) {
-                    console.log("Redirecting to welcome.html");
+                // Only redirect if we're not on the welcome page and if redirection hasn't happened yet
+                if (!redirectAlreadyTriggered && !window.location.href.includes("welcome.html")) {
+                    redirectAlreadyTriggered = true; // Prevent further redirects
+                    console.log("User is logged in, redirecting to welcome.html...");
                     setTimeout(() => {
                         window.location.replace("welcome.html");
-                    }, 2000); // 2-second delay for debugging
+                    }, 2000); // Add a 2-second delay
                 }
             } else {
                 console.log("No user is logged in.");
@@ -105,7 +108,7 @@
             try {
                 const result = await signInWithPopup(auth, provider);
                 console.log("Gmail login success:", result.user);
-                window.location.replace("welcome.html"); // Redirect after login
+                // The redirection will happen automatically in onAuthStateChanged
             } catch (error) {
                 console.error("Error during Gmail login:", error);
                 alert("Error during Gmail login: " + error.message);
@@ -122,7 +125,7 @@
             try {
                 const result = await signInWithPopup(auth, provider);
                 console.log("Facebook login success:", result.user);
-                window.location.replace("welcome.html"); // Redirect after login
+                // The redirection will happen automatically in onAuthStateChanged
             } catch (error) {
                 if (error.code === 'auth/account-exists-with-different-credential') {
                     const email = error.customData.email;
