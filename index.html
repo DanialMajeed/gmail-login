@@ -80,17 +80,16 @@
         // Firebase Auth State Listener
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                // Only redirect if the user is logged in and we haven't already redirected
-                if (!sessionStorage.getItem('redirected')) {
+                if (!localStorage.getItem('redirected')) {
                     console.log("User is logged in, redirecting to welcome.html...");
-                    sessionStorage.setItem('redirected', 'true'); // Mark as redirected
+                    localStorage.setItem('redirected', 'true');
                     setTimeout(() => {
                         window.location.replace("welcome.html");
-                    }, 2000); // Add a 2-second delay
+                    }, 2000);
                 }
             } else {
                 console.log("No user is logged in.");
-                sessionStorage.removeItem('redirected'); // Reset redirected flag when user is logged out
+                localStorage.removeItem('redirected');
             }
         });
 
@@ -106,7 +105,6 @@
             try {
                 const result = await signInWithPopup(auth, provider);
                 console.log("Gmail login success:", result.user);
-                // The redirection will happen automatically in onAuthStateChanged
             } catch (error) {
                 console.error("Error during Gmail login:", error);
                 alert("Error during Gmail login: " + error.message);
@@ -123,7 +121,6 @@
             try {
                 const result = await signInWithPopup(auth, provider);
                 console.log("Facebook login success:", result.user);
-                // The redirection will happen automatically in onAuthStateChanged
             } catch (error) {
                 if (error.code === 'auth/account-exists-with-different-credential') {
                     const email = error.customData.email;
