@@ -6,16 +6,46 @@
     <title>Login with Gmail and Facebook</title>
     <script type="module" src="https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js"></script>
     <script type="module" src="https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 10px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .loading {
+            display: none;
+        }
+        .loading.active {
+            display: block;
+            margin-top: 20px;
+            font-size: 18px;
+            color: blue;
+        }
+    </style>
 </head>
 <body>
     <h1>Login with Gmail and Facebook</h1>
     <button id="loginBtnGmail">Login with Gmail</button>
     <button id="loginBtnFacebook">Login with Facebook</button>
+    <div id="loadingMessage" class="loading">Please wait...</div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
-        import { getAuth, GoogleAuthProvider, FacebookAuthProvider, signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
+        import { 
+            getAuth, 
+            GoogleAuthProvider, 
+            FacebookAuthProvider, 
+            signInWithPopup, 
+            onAuthStateChanged 
+        } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
 
+        // Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyC9khdafWDfBKOV2baaqucQJDWYqcykdeM",
             authDomain: "email-login-aa2e7.firebaseapp.com",
@@ -29,8 +59,23 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
 
+        // DOM elements
         const loginBtnGmail = document.getElementById("loginBtnGmail");
         const loginBtnFacebook = document.getElementById("loginBtnFacebook");
+        const loadingMessage = document.getElementById("loadingMessage");
+
+        // Utility function to show/hide loading message
+        const setLoading = (isLoading) => {
+            if (isLoading) {
+                loadingMessage.classList.add("active");
+                loginBtnGmail.disabled = true;
+                loginBtnFacebook.disabled = true;
+            } else {
+                loadingMessage.classList.remove("active");
+                loginBtnGmail.disabled = false;
+                loginBtnFacebook.disabled = false;
+            }
+        };
 
         // Firebase Auth State Listener
         onAuthStateChanged(auth, (user) => {
@@ -44,55 +89,58 @@
         loginBtnGmail.addEventListener("click", async () => {
             const provider = new GoogleAuthProvider();
             provider.setCustomParameters({
-                prompt: 'select_account' 
+                prompt: 'select_account'
             });
+
+            setLoading(true);
 
             try {
                 const result = await signInWithPopup(auth, provider);
                 console.log("Gmail login success:", result.user); // Log user info
-                window.location.href = "welcome.html";  // Redirect on success
+                window.location.href = "welcome.html"; // Redirect on success
             } catch (error) {
                 console.error("Error during Gmail login:", error.message);
                 alert("Error during Gmail login: " + error.message);
+            } finally {
+                setLoading(false);
             }
         });
 
         // Facebook login
-       loginBtnFacebook.addEventListener("click", async () => {
-    const provider = new FacebookAuthProvider();
+        loginBtnFacebook.addEventListener("click", async () => {
+            const provider = new FacebookAuthProvider();
+            setLoading(true);
 
-    try {
-        const result = await signInWithPopup(auth, provider);
-        console.log("Facebook login success:", result.user); // Log user info
-        window.location.href = "welcome.html";  // Redirect on success
-    } catch (error) {
-        if (error.code === 'auth/account-exists-with-different-credential') {
-            // Fetch the email and credential causing the conflict
-            const email = error.customData.email;
-            const pendingCredential = FacebookAuthProvider.credentialFromError(error);
+            try {
+                const result = await signInWithPopup(auth, provider);
+                console.log("Facebook login success:", result.user); // Log user info
+                window.location.href = "welcome.html"; // Redirect on success
+            } catch (error) {
+                if (error.code === 'auth/account-exists-with-different-credential') {
+                    const email = error.customData.email;
+                    const pendingCredential = FacebookAuthProvider.credentialFromError(error);
 
-            // Fetch sign-in methods for the email
-            const signInMethods = await auth.fetchSignInMethodsForEmail(email);
+                    const signInMethods = await auth.fetchSignInMethodsForEmail(email);
 
-            if (signInMethods.includes('google.com')) {
-                // Ask the user to sign in with Google
-                const googleProvider = new GoogleAuthProvider();
-                const googleResult = await signInWithPopup(auth, googleProvider);
+                    if (signInMethods.includes('google.com')) {
+                        alert("Account exists with Gmail. Please log in with Gmail first to link your accounts.");
+                        const googleProvider = new GoogleAuthProvider();
+                        const googleResult = await signInWithPopup(auth, googleProvider);
 
-                // Link Facebook credential to the Google account
-                await googleResult.user.linkWithCredential(pendingCredential);
-                console.log("Facebook credential linked with Google account.");
-                window.location.href = "welcome.html";  // Redirect on success
-            } else {
-                alert("Please use the same provider you used to sign up.");
+                        await googleResult.user.linkWithCredential(pendingCredential);
+                        console.log("Facebook credential linked with Google account.");
+                        window.location.href = "welcome.html"; // Redirect on success
+                    } else {
+                        alert("An account already exists with this email. Use the original provider to log in.");
+                    }
+                } else {
+                    console.error("Error during Facebook login:", error.message);
+                    alert("Error during Facebook login: " + error.message);
+                }
+            } finally {
+                setLoading(false);
             }
-        } else {
-            console.error("Error during Facebook login:", error.message);
-            alert("Error during Facebook login: " + error.message);
-        }
-    }
-});
-
+        });
     </script>
 </body>
 </html>
