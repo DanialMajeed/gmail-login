@@ -81,11 +81,12 @@
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 console.log("User is logged in:", user);
-
-                // Redirect to welcome.html only if not already there
+                // Redirect only if not already on the welcome page
                 if (!window.location.href.includes("welcome.html")) {
                     console.log("Redirecting to welcome.html");
-                    window.location.replace("welcome.html");
+                    setTimeout(() => {
+                        window.location.replace("welcome.html");
+                    }, 2000); // 2-second delay for debugging
                 }
             } else {
                 console.log("No user is logged in.");
@@ -106,7 +107,7 @@
                 console.log("Gmail login success:", result.user);
                 window.location.replace("welcome.html"); // Redirect after login
             } catch (error) {
-                console.error("Error during Gmail login:", error.message);
+                console.error("Error during Gmail login:", error);
                 alert("Error during Gmail login: " + error.message);
             } finally {
                 setLoading(false);
@@ -141,7 +142,7 @@
                         alert("An account already exists with this email. Use the original provider to log in.");
                     }
                 } else {
-                    console.error("Error during Facebook login:", error.message);
+                    console.error("Error during Facebook login:", error);
                     alert("Error during Facebook login: " + error.message);
                 }
             } finally {
