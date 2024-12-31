@@ -121,6 +121,20 @@
             try {
                 const result = await signInWithPopup(auth, provider);
                 console.log("Facebook login success:", result.user);
+
+                // Explicitly check user state after Facebook login
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        console.log("User is logged in after Facebook login, redirecting to welcome.html...");
+                        if (!localStorage.getItem('redirected')) {
+                            localStorage.setItem('redirected', 'true');
+                            setTimeout(() => {
+                                window.location.replace("welcome.html");
+                            }, 2000);
+                        }
+                    }
+                });
+
             } catch (error) {
                 if (error.code === 'auth/account-exists-with-different-credential') {
                     const email = error.customData.email;
