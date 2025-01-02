@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login with Social Accounts</title>
+    <title>Login with Gmail, Facebook, and Twitter</title>
     <script type="module" src="https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js"></script>
     <script type="module" src="https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js"></script>
     <style>
@@ -30,16 +30,14 @@
     </style>
 </head>
 <body>
-    <h1>Login with Social Accounts</h1>
-    <button data-provider="Google">Login with Gmail</button>
-    <button data-provider="Facebook">Login with Facebook</button>
-    <button data-provider="Twitter">Login with Twitter</button>
+    <h1>Login with Gmail, Facebook, and Twitter</h1>
+    <button id="loginBtnGmail">Login with Gmail</button>
+    <button id="loginBtnFacebook">Login with Facebook</button>
+    <button id="loginBtnTwitter">Login with Twitter</button>
     <div id="loadingMessage" class="loading">Please wait...</div>
 
     <script type="module">
-        import { 
-            initializeApp 
-        } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
         import { 
             getAuth, 
             GoogleAuthProvider, 
@@ -63,57 +61,110 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
 
+        // DOM elements
+        const loginBtnGmail = document.getElementById("loginBtnGmail");
+        const loginBtnFacebook = document.getElementById("loginBtnFacebook");
+        const loginBtnTwitter = document.getElementById("loginBtnTwitter");
         const loadingMessage = document.getElementById("loadingMessage");
 
-        // Utility to toggle loading message
-        const toggleLoading = (show) => {
-            loadingMessage.classList.toggle("active", show);
-            document.querySelectorAll("button").forEach(button => button.disabled = show);
+        // Utility function to show/hide loading message
+        const setLoading = (isLoading) => {
+            if (isLoading) {
+                loadingMessage.classList.add("active");
+                loginBtnGmail.disabled = true;
+                loginBtnFacebook.disabled = true;
+                loginBtnTwitter.disabled = true;
+            } else {
+                loadingMessage.classList.remove("active");
+                loginBtnGmail.disabled = false;
+                loginBtnFacebook.disabled = false;
+                loginBtnTwitter.disabled = false;
+            }
         };
 
-        // Redirect after login
-        const redirectToWelcome = () => {
+        // Redirect user to welcome.html
+        const redirectToWelcomePage = () => {
             console.log("Redirecting to welcome.html...");
             window.location.replace("welcome.html");
         };
 
-        // Map provider names to Firebase provider instances
-        const providers = {
-            Google: new GoogleAuthProvider(),
-            Facebook: new FacebookAuthProvider(),
-            Twitter: new TwitterAuthProvider(),
-        };
+        // Firebase Auth State Listener
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                console.log("User detected:", user);
+                redirectToWelcomePage();
+            } else {
+                console.log("No user detected.");
+            }
+        });
 
-        // Login handler
-        const handleLogin = async (providerName) => {
-            const provider = providers[providerName];
-            if (!provider) return;
+        // Gmail login
+        loginBtnGmail.addEventListener("click", async () => {
+            const provider = new GoogleAuthProvider();
+            provider.setCustomParameters({
+                prompt: 'select_account'
+            });
 
-            toggleLoading(true);
+            setLoading(true);
 
             try {
                 await signInWithPopup(auth, provider);
-                console.log(`${providerName} login successful.`);
+                console.log("Gmail login successful.");
             } catch (error) {
-                console.error(`Error during ${providerName} login:`, error);
-                alert(`Error during ${providerName} login: ${error.message}`);
+                console.error("Error during Gmail login:", error);
+                alert("Error during Gmail login: " + error.message);
             } finally {
-                toggleLoading(false);
+                setLoading(false);
             }
-        };
-
-        // Attach event listeners
-        document.querySelectorAll("button").forEach(button => {
-            button.addEventListener("click", () => handleLogin(button.dataset.provider));
         });
 
-        // Check authentication state
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                console.log("User logged in:", user);
-                redirectToWelcome();
-            } else {
-                console.log("No user logged in.");
+        // Facebook login
+        loginBtnFacebook.addEventListener("click", async () => {
+            const provider = new FacebookAuthProvider();
+            setLoading(true);
+
+            try {
+                await signInWithPopup(auth, provider);
+                console.log("Facebook login successful.");
+            } catch (error) {
+                console.error("Error during Facebook login:", error);
+
+                if (error.code === 'auth/account-exists-with-different-credential') {
+                    const email = error.customData.email;
+                    const pendingCredential = FacebookAuthProvider.credentialFromError(error);
+                    const signInMethods = await auth.fetchSignInMethodsForEmail(email);
+
+                    if (signInMethods.includes('google.com')) {
+                        alert("Account exists with Gmail. Please log in with Gmail first to link your accounts.");
+                        const googleProvider = new GoogleAuthProvider();
+                        const googleResult = await signInWithPopup(auth, googleProvider);
+                        await googleResult.user.linkWithCredential(pendingCredential);
+                        console.log("Facebook credential linked with Google account.");
+                        redirectToWelcomePage();
+                    } else {
+                        alert("An account already exists with this email. Use the original provider to log in.");
+                    }
+                } else {
+                    alert("Error during Facebook login: " + error.message);
+                }
+            } finally {
+                setLoading(false);
+            }
+        });
+
+        // Twitter login
+        loginBtnTwitter.addEventListener("click", async () => {
+            const provider = new TwitterAuthProvider();
+            setLoading(true);
+
+            try {
+                await signInWithPopup(auth, provider);
+                console.log("Twitter login successful.");
+            } catch (error) {
+                console.error("Error during Twitter login:", error);
+                alert("Error during Twitter login: " + error.message);
+            } finally {
+                setLoading(false);
             }
         });
     </script>
