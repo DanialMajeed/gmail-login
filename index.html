@@ -31,14 +31,16 @@
 </head>
 <body>
     <h1>Login with Social Accounts</h1>
-    <button data-provider="Gmail">Login with Gmail</button>
+    <button data-provider="Google">Login with Gmail</button>
     <button data-provider="Facebook">Login with Facebook</button>
     <button data-provider="Twitter">Login with Twitter</button>
     <div id="loadingMessage" class="loading">Please wait...</div>
 
     <script type="module">
         import { 
-            initializeApp, 
+            initializeApp 
+        } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
+        import { 
             getAuth, 
             GoogleAuthProvider, 
             FacebookAuthProvider, 
@@ -75,9 +77,9 @@
             window.location.replace("welcome.html");
         };
 
-        // Provider map for cleaner code
+        // Map provider names to Firebase provider instances
         const providers = {
-            Gmail: new GoogleAuthProvider(),
+            Google: new GoogleAuthProvider(),
             Facebook: new FacebookAuthProvider(),
             Twitter: new TwitterAuthProvider(),
         };
