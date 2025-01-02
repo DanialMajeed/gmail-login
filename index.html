@@ -67,20 +67,7 @@
         const loginBtnTwitter = document.getElementById("loginBtnTwitter");
         const loadingMessage = document.getElementById("loadingMessage");
 
-        // Utility function to show/hide loading message
-        const setLoading = (isLoading) => {
-            if (isLoading) {
-                loadingMessage.classList.add("active");
-                loginBtnGmail.disabled = true;
-                loginBtnFacebook.disabled = true;
-                loginBtnTwitter.disabled = true;
-            } else {
-                loadingMessage.classList.remove("active");
-                loginBtnGmail.disabled = false;
-                loginBtnFacebook.disabled = false;
-                loginBtnTwitter.disabled = false;
-            }
-        };
+       
 
         // Redirect user to welcome.html
         const redirectToWelcomePage = () => {
