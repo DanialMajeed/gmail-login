@@ -82,19 +82,16 @@
             }
         };
 
+        // Redirect user to welcome.html when authenticated
+        const redirectToWelcomePage = () => {
+            console.log("Redirecting to welcome.html...");
+            window.location.replace("welcome.html");
+        };
+
         // Firebase Auth State Listener
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                if (!localStorage.getItem('redirected')) {
-                    console.log("User is logged in, redirecting to welcome.html...");
-                    localStorage.setItem('redirected', 'true');
-                    setTimeout(() => {
-                        window.location.replace("welcome.html");
-                    }, 2000);
-                }
-            } else {
-                console.log("No user is logged in.");
-                localStorage.removeItem('redirected');
+                redirectToWelcomePage();
             }
         });
 
@@ -125,27 +122,8 @@
             try {
                 await signInWithPopup(auth, provider);
             } catch (error) {
-                if (error.code === 'auth/account-exists-with-different-credential') {
-                    const email = error.customData.email;
-                    const pendingCredential = FacebookAuthProvider.credentialFromError(error);
-
-                    const signInMethods = await auth.fetchSignInMethodsForEmail(email);
-
-                    if (signInMethods.includes('google.com')) {
-                        alert("Account exists with Gmail. Please log in with Gmail first to link your accounts.");
-                        const googleProvider = new GoogleAuthProvider();
-                        const googleResult = await signInWithPopup(auth, googleProvider);
-
-                        await googleResult.user.linkWithCredential(pendingCredential);
-                        console.log("Facebook credential linked with Google account.");
-                        redirectToWelcomePage();
-                    } else {
-                        alert("An account already exists with this email. Use the original provider to log in.");
-                    }
-                } else {
-                    console.error("Error during Facebook login:", error);
-                    alert("Error during Facebook login: " + error.message);
-                }
+                console.error("Error during Facebook login:", error);
+                alert("Error during Facebook login: " + error.message);
             } finally {
                 setLoading(false);
             }
