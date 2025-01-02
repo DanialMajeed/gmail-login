@@ -129,24 +129,6 @@
             } catch (error) {
                 console.error("Error during Facebook login:", error);
 
-                if (error.code === 'auth/account-exists-with-different-credential') {
-                    const email = error.customData.email;
-                    const pendingCredential = FacebookAuthProvider.credentialFromError(error);
-                    const signInMethods = await auth.fetchSignInMethodsForEmail(email);
-
-                    if (signInMethods.includes('google.com')) {
-                        alert("Account exists with Gmail. Please log in with Gmail first to link your accounts.");
-                        const googleProvider = new GoogleAuthProvider();
-                        const googleResult = await signInWithPopup(auth, googleProvider);
-                        await googleResult.user.linkWithCredential(pendingCredential);
-                        console.log("Facebook credential linked with Google account.");
-                        redirectToWelcomePage();
-                    } else {
-                        alert("An account already exists with this email. Use the original provider to log in.");
-                    }
-                } else {
-                    alert("Error during Facebook login: " + error.message);
-                }
             } finally {
                 setLoading(false);
             }
