@@ -52,15 +52,20 @@
             }
         });
 
-        // Logout functionality
-        logoutBtn.addEventListener("click", async () => {
-            try {
-                await signOut(auth);
-                console.log("User signed out.");
-                window.location.href = "index.html"; // Redirect to login page after logout
-            } catch (error) {
-                console.error("Error during logout:", error.message);
-                alert("Error during logout: " + error.message);
+        // Logout functionality with confirmation
+        logoutBtn.addEventListener("click", () => {
+            const confirmation = confirm("Are you sure you want to log out?");
+            if (confirmation) {
+                // Proceed with logout
+                signOut(auth).then(() => {
+                    console.log("User signed out.");
+                    window.location.href = "index.html"; // Redirect to login page after logout
+                }).catch((error) => {
+                    console.error("Error during logout:", error.message);
+                    alert("Error during logout: " + error.message);
+                });
+            } else {
+                console.log("User canceled logout.");
             }
         });
     </script>
