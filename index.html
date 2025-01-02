@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -67,7 +67,14 @@
         const loginBtnTwitter = document.getElementById("loginBtnTwitter");
         const loadingMessage = document.getElementById("loadingMessage");
 
-       
+        // Function to toggle loading state
+        const setLoading = (isLoading) => {
+            if (isLoading) {
+                loadingMessage.classList.add('active');
+            } else {
+                loadingMessage.classList.remove('active');
+            }
+        };
 
         // Redirect user to welcome.html
         const redirectToWelcomePage = () => {
@@ -81,7 +88,6 @@
                 console.log("User detected:", user);
                 redirectToWelcomePage();
             } else {
-                
                 console.log("No user detected.");
             }
         });
@@ -116,7 +122,6 @@
                 console.log("Facebook login successful.");
             } catch (error) {
                 console.error("Error during Facebook login:", error);
-
             } finally {
                 setLoading(false);
             }
