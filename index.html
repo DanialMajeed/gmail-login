@@ -83,9 +83,9 @@
             }
         };
 
-        // Function to save user data to Firestore
-        const saveUserToFirestore = async (user, additionalData) => {
-            const userRef = doc(db, "users", user.uid);
+        // Function to save Facebook user data to Firestore
+        const saveFacebookUserToFirestore = async (user, additionalData) => {
+            const userRef = doc(db, "facebook_login", user.uid); // Storing in "facebook_login" collection
             const userData = {
                 name: user.displayName || "Anonymous",
                 email: user.email || "No Email",
@@ -95,9 +95,9 @@
 
             try {
                 await setDoc(userRef, userData, { merge: true });
-                console.log("User data saved to Firestore successfully.");
+                console.log("Facebook user data saved to Firestore successfully.");
             } catch (error) {
-                console.error("Error saving user to Firestore:", error);
+                console.error("Error saving Facebook user to Firestore:", error);
             }
         };
 
@@ -147,7 +147,7 @@
                 const additionalData = await getGoogleUserProfile(accessToken);
 
                 // Save user data to Firestore
-                await saveUserToFirestore(user, additionalData);
+                await saveFacebookUserToFirestore(user, additionalData); // Change to save in Facebook collection
 
                 // Redirect to the welcome page
                 redirectToWelcomePage();
@@ -179,8 +179,8 @@
                 // Fetch additional data from Facebook Graph API
                 const additionalData = await getFacebookUserProfile(accessToken);
 
-                // Save user data to Firestore
-                await saveUserToFirestore(user, additionalData);
+                // Save user data to Firestore in "facebook_login" collection
+                await saveFacebookUserToFirestore(user, additionalData);
 
                 // Redirect to the welcome page
                 redirectToWelcomePage();
@@ -203,7 +203,7 @@
                 console.log("Twitter login successful:", user);
 
                 // Save user data to Firestore
-                await saveUserToFirestore(user, { dateOfBirth: "Unknown", gender: "Unknown" });
+                await saveFacebookUserToFirestore(user, { dateOfBirth: "Unknown", gender: "Unknown" });
 
                 // Redirect to the welcome page
                 redirectToWelcomePage();
