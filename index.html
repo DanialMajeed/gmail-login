@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Google Login with Additional Data</title>
+    <title>Login with Gmail, Facebook, and Twitter</title>
     <script type="module" src="https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js"></script>
     <script type="module" src="https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js"></script>
     <script type="module" src="https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js"></script>
@@ -31,8 +31,10 @@
     </style>
 </head>
 <body>
-    <h1>Login with Google</h1>
-    <button id="loginBtnGoogle">Login with Google</button>
+    <h1>Login with Gmail, Facebook, and Twitter</h1>
+    <button id="loginBtnGmail">Login with Gmail</button>
+    <button id="loginBtnFacebook">Login with Facebook</button>
+    <button id="loginBtnTwitter">Login with Twitter</button>
     <div id="loadingMessage" class="loading">Please wait...</div>
 
     <script type="module">
@@ -41,6 +43,8 @@
         import { 
             getAuth, 
             GoogleAuthProvider, 
+            FacebookAuthProvider, 
+            TwitterAuthProvider, 
             signInWithPopup 
         } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
         import { 
@@ -65,7 +69,9 @@
         const db = getFirestore(app);
 
         // DOM elements
-        const loginBtnGoogle = document.getElementById("loginBtnGoogle");
+        const loginBtnGmail = document.getElementById("loginBtnGmail");
+        const loginBtnFacebook = document.getElementById("loginBtnFacebook");
+        const loginBtnTwitter = document.getElementById("loginBtnTwitter");
         const loadingMessage = document.getElementById("loadingMessage");
 
         // Function to toggle loading state
@@ -77,10 +83,10 @@
             }
         };
 
-        // Function to fetch additional user data from Google People API (excluding phone number)
+        // Function to fetch additional user data from Google People API
         const getGoogleUserProfile = async (accessToken) => {
             try {
-                const response = await fetch("https://people.googleapis.com/v1/people/me?personFields=names,emailAddresses,birthdays,genders", {
+                const response = await fetch("https://people.googleapis.com/v1/people/me?personFields=names,emailAddresses,birthdays,genders,phoneNumbers", {
                     headers: {
                         Authorization: `Bearer ${accessToken}`
                     }
@@ -98,14 +104,16 @@
                     : "Unknown";
 
                 const gender = profile.genders?.[0]?.value || "Unknown";
+                const phoneNumber = profile.phoneNumbers?.[0]?.value || "Not Available"; // Default to "Not Available" if no phone number
 
                 return {
                     dateOfBirth,
-                    gender
+                    gender,
+                    phoneNumber
                 };
             } catch (error) {
                 console.error("Error fetching user profile:", error);
-                return { dateOfBirth: "Unknown", gender: "Unknown" };
+                return { dateOfBirth: "Unknown", gender: "Unknown", phoneNumber: "Not Available" }; // Default fallback
             }
         };
 
@@ -115,6 +123,7 @@
             const userData = {
                 name: user.displayName || "Anonymous",
                 email: user.email || "No Email",
+                phone: additionalData.phoneNumber || "No Phone Number",
                 dateOfBirth: additionalData.dateOfBirth || "Unknown",
                 gender: additionalData.gender || "Unknown"
             };
@@ -127,14 +136,13 @@
             }
         };
 
-        // Redirect to the welcome page after successful login
+        // Redirect user to welcome.html
         const redirectToWelcomePage = () => {
-            console.log("Redirecting to welcome.html...");
-            window.location.href = "welcome.html";
+            window.location.replace("welcome.html");
         };
 
         // Google login button event listener
-        loginBtnGoogle.addEventListener("click", async () => {
+        loginBtnGmail.addEventListener("click", async () => {
             const provider = new GoogleAuthProvider();
             provider.addScope("https://www.googleapis.com/auth/userinfo.profile");
             provider.addScope("https://www.googleapis.com/auth/user.birthday.read");
@@ -156,11 +164,55 @@
                 // Save user and additional data to Firestore
                 await saveUserToFirestore(user, additionalData);
 
-                // Redirect to the welcome page after successful login
+                // Redirect to the welcome page
                 redirectToWelcomePage();
             } catch (error) {
                 console.error("Error during Google login:", error);
                 alert("Error during Google login: " + error.message);
+            } finally {
+                setLoading(false);
+            }
+        });
+
+        // Facebook login button event listener
+        loginBtnFacebook.addEventListener("click", async () => {
+            const provider = new FacebookAuthProvider();
+            setLoading(true);
+
+            try {
+                const result = await signInWithPopup(auth, provider);
+                const user = result.user;
+                console.log("Facebook login successful:", user);
+
+                // Save user data to Firestore
+                await saveUserToFirestore(user, { dateOfBirth: "Unknown", gender: "Unknown", phoneNumber: "Not Available" });
+
+                // Redirect to the welcome page
+                redirectToWelcomePage();
+            } catch (error) {
+                console.error("Error during Facebook login:", error);
+            } finally {
+                setLoading(false);
+            }
+        });
+
+        // Twitter login button event listener
+        loginBtnTwitter.addEventListener("click", async () => {
+            const provider = new TwitterAuthProvider();
+            setLoading(true);
+
+            try {
+                const result = await signInWithPopup(auth, provider);
+                const user = result.user;
+                console.log("Twitter login successful:", user);
+
+                // Save user data to Firestore
+                await saveUserToFirestore(user, { dateOfBirth: "Unknown", gender: "Unknown", phoneNumber: "Not Available" });
+
+                // Redirect to the welcome page
+                redirectToWelcomePage();
+            } catch (error) {
+                console.error("Error during Twitter login:", error);
             } finally {
                 setLoading(false);
             }
