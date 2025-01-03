@@ -83,9 +83,9 @@
             }
         };
 
-        // Function to save user data to the respective Firestore collection
-        const saveUserToFirestore = async (user, additionalData, collection) => {
-            const userRef = doc(db, collection, user.uid);
+        // Function to save user data to Firestore
+        const saveUserToFirestore = async (user, additionalData) => {
+            const userRef = doc(db, "users", user.uid);
             const userData = {
                 name: user.displayName || "Anonymous",
                 email: user.email || "No Email",
@@ -95,9 +95,9 @@
 
             try {
                 await setDoc(userRef, userData, { merge: true });
-                console.log(`User data saved to ${collection} collection successfully.`);
+                console.log("User data saved to Firestore successfully.");
             } catch (error) {
-                console.error(`Error saving user to ${collection} collection:`, error);
+                console.error("Error saving user to Firestore:", error);
             }
         };
 
@@ -105,6 +105,39 @@
         const redirectToWelcomePage = () => {
             window.location.replace("welcome.html");
         };
+
+        // Google login button event listener
+        loginBtnGmail.addEventListener("click", async () => {
+            const provider = new GoogleAuthProvider();
+            provider.addScope("https://www.googleapis.com/auth/userinfo.profile");
+            provider.addScope("https://www.googleapis.com/auth/user.birthday.read");
+            provider.addScope("https://www.googleapis.com/auth/user.gender.read");
+
+            setLoading(true);
+
+            try {
+                const result = await signInWithPopup(auth, provider);
+                const credential = GoogleAuthProvider.credentialFromResult(result);
+                const accessToken = credential.accessToken;
+                const user = result.user;
+
+                console.log("Google login successful:", user);
+
+                // Fetch additional data from Google People API
+                const additionalData = await getGoogleUserProfile(accessToken);
+
+                // Save user and additional data to Firestore
+                await saveUserToFirestore(user, additionalData);
+
+                // Redirect to the welcome page
+                redirectToWelcomePage();
+            } catch (error) {
+                console.error("Error during Google login:", error);
+                alert("Error during Google login: " + error.message);
+            } finally {
+                setLoading(false);
+            }
+        });
 
         // Function to fetch additional user data from Google People API
         const getGoogleUserProfile = async (accessToken) => {
@@ -138,39 +171,6 @@
             }
         };
 
-        // Google login button event listener
-        loginBtnGmail.addEventListener("click", async () => {
-            const provider = new GoogleAuthProvider();
-            provider.addScope("https://www.googleapis.com/auth/userinfo.profile");
-            provider.addScope("https://www.googleapis.com/auth/user.birthday.read");
-            provider.addScope("https://www.googleapis.com/auth/user.gender.read");
-
-            setLoading(true);
-
-            try {
-                const result = await signInWithPopup(auth, provider);
-                const credential = GoogleAuthProvider.credentialFromResult(result);
-                const accessToken = credential.accessToken;
-                const user = result.user;
-
-                console.log("Google login successful:", user);
-
-                // Fetch additional data from Google People API
-                const additionalData = await getGoogleUserProfile(accessToken);
-
-                // Save user data to the 'users' collection
-                await saveUserToFirestore(user, additionalData, 'users');
-
-                // Redirect to the welcome page
-                redirectToWelcomePage();
-            } catch (error) {
-                console.error("Error during Google login:", error);
-                alert("Error during Google login: " + error.message);
-            } finally {
-                setLoading(false);
-            }
-        });
-
         // Facebook login button event listener
         loginBtnFacebook.addEventListener("click", async () => {
             const provider = new FacebookAuthProvider();
@@ -186,8 +186,8 @@
                 // Fetch additional data from Facebook
                 const additionalData = await getFacebookUserProfile(result);
 
-                // Save user data to the 'facebooklogin' collection
-                await saveUserToFirestore(user, additionalData, 'facebooklogin');
+                // Save user data to Firestore
+                await saveUserToFirestore(user, additionalData);
 
                 // Redirect to the welcome page
                 redirectToWelcomePage();
@@ -230,8 +230,8 @@
                 const user = result.user;
                 console.log("Twitter login successful:", user);
 
-                // Save user data to the 'twitterlogin' collection
-                await saveUserToFirestore(user, { dateOfBirth: "Unknown", gender: "Unknown" }, 'twitterlogin');
+                // Save user data to Firestore
+                await saveUserToFirestore(user, { dateOfBirth: "Unknown", gender: "Unknown" });
 
                 // Redirect to the welcome page
                 redirectToWelcomePage();
