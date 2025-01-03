@@ -221,26 +221,52 @@
         };
 
         // Twitter login button event listener
-        loginBtnTwitter.addEventListener("click", async () => {
-            const provider = new TwitterAuthProvider();
-            setLoading(true);
+        // Twitter login button event listener
+loginBtnTwitter.addEventListener("click", async () => {
+    const provider = new TwitterAuthProvider();
+    setLoading(true);
 
-            try {
-                const result = await signInWithPopup(auth, provider);
-                const user = result.user;
-                console.log("Twitter login successful:", user);
+    try {
+        const result = await signInWithPopup(auth, provider);
+        const user = result.user;
+        console.log("Twitter login successful:", user);
 
-                // Save user data to Firestore
-                await saveUserToFirestore(user, { dateOfBirth: "Unknown", gender: "Unknown" });
+        // Extract additional information available from the Twitter user object
+        const additionalData = {
+            name: user.displayName || "Unknown",
+            email: user.email || "Not Available",
+            profilePicture: user.photoURL || "No Profile Picture"
+        };
 
-                // Redirect to the welcome page
-                redirectToWelcomePage();
-            } catch (error) {
-                console.error("Error during Twitter login:", error);
-            } finally {
-                setLoading(false);
-            }
-        });
+        // Save user data to Firestore
+        await saveTwitterUserToFirestore(user, additionalData);
+
+        // Redirect to the welcome page
+        redirectToWelcomePage();
+    } catch (error) {
+        console.error("Error during Twitter login:", error);
+    } finally {
+        setLoading(false);
+    }
+});
+
+// Function to save Twitter user data to Firestore
+const saveTwitterUserToFirestore = async (user, additionalData) => {
+    const twitterUserRef = doc(db, "twitterlogin", user.uid);
+    const userData = {
+        name: additionalData.name,
+        email: additionalData.email,
+        profilePicture: additionalData.profilePicture
+    };
+
+    try {
+        await setDoc(twitterUserRef, userData, { merge: true });
+        console.log("Twitter user data saved to Firestore successfully.");
+    } catch (error) {
+        console.error("Error saving Twitter user to Firestore:", error);
+    }
+};
+
     </script>
 </body>
 </html>
