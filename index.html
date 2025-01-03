@@ -39,9 +39,20 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
-        import { getAuth, GoogleAuthProvider, FacebookAuthProvider, TwitterAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
-        import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+        import { 
+            getAuth, 
+            GoogleAuthProvider, 
+            FacebookAuthProvider, 
+            TwitterAuthProvider, 
+            signInWithPopup 
+        } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
+        import { 
+            getFirestore, 
+            doc, 
+            setDoc 
+        } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
 
+        // Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyC9khdafWDfBKOV2baaqucQJDWYqcykdeM",
             authDomain: "email-login-aa2e7.firebaseapp.com",
@@ -51,98 +62,91 @@
             appId: "1:574147870776:web:c4c5228e6535c4a3e9a6cd"
         };
 
+        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
 
+        // DOM elements
         const loginBtnGmail = document.getElementById("loginBtnGmail");
         const loginBtnFacebook = document.getElementById("loginBtnFacebook");
         const loginBtnTwitter = document.getElementById("loginBtnTwitter");
         const loadingMessage = document.getElementById("loadingMessage");
 
+        // Function to toggle loading state
         const setLoading = (isLoading) => {
-            loadingMessage.classList.toggle("active", isLoading);
+            loadingMessage.classList.toggle('active', isLoading);
         };
 
-        const saveUserToFirestore = async (collection, userId, data) => {
+        // Function to save user data to Firestore
+        const saveUserToFirestore = async (collectionName, uid, userData) => {
+            const userRef = doc(db, collectionName, uid);
             try {
-                await setDoc(doc(db, collection, userId), data, { merge: true });
-                console.log(`${collection} data saved to Firestore successfully.`);
+                await setDoc(userRef, userData, { merge: true });
+                console.log(`${collectionName} user data saved to Firestore successfully.`);
             } catch (error) {
-                console.error(`Error saving data to Firestore:`, error);
+                console.error(`Error saving user to Firestore in ${collectionName}:`, error);
             }
         };
 
+        // Redirect user to welcome.html
         const redirectToWelcomePage = () => {
             window.location.replace("welcome.html");
         };
 
+        // Gmail login
         loginBtnGmail.addEventListener("click", async () => {
             const provider = new GoogleAuthProvider();
             provider.addScope("https://www.googleapis.com/auth/userinfo.profile");
-            provider.addScope("https://www.googleapis.com/auth/user.birthday.read");
-            provider.addScope("https://www.googleapis.com/auth/user.gender.read");
 
             setLoading(true);
 
             try {
                 const result = await signInWithPopup(auth, provider);
-                const credential = GoogleAuthProvider.credentialFromResult(result);
-                const accessToken = credential.accessToken;
                 const user = result.user;
 
-                const additionalData = await fetch(`https://people.googleapis.com/v1/people/me?personFields=names,emailAddresses,birthdays,genders`, {
-                    headers: { Authorization: `Bearer ${accessToken}` }
-                }).then((res) => res.json()).catch(() => ({ dateOfBirth: "Unknown", gender: "Unknown" }));
-
                 const userData = {
-                    name: user.displayName || "Anonymous",
-                    email: user.email || "No Email",
-                    ...additionalData
+                    name: user.displayName || "Unknown",
+                    email: user.email || "Not Available",
+                    profilePicture: user.photoURL || "No Profile Picture"
                 };
 
                 await saveUserToFirestore("users", user.uid, userData);
                 redirectToWelcomePage();
             } catch (error) {
-                console.error("Error during Google login:", error);
-                alert(`Google login failed: ${error.message}`);
+                console.error("Error during Gmail login:", error);
             } finally {
                 setLoading(false);
             }
         });
 
+        // Facebook login
         loginBtnFacebook.addEventListener("click", async () => {
             const provider = new FacebookAuthProvider();
-            provider.addScope("user_birthday");
-            provider.addScope("user_gender");
+            provider.addScope("public_profile");
 
             setLoading(true);
 
             try {
                 const result = await signInWithPopup(auth, provider);
-                const accessToken = FacebookAuthProvider.credentialFromResult(result).accessToken;
                 const user = result.user;
 
-                const additionalData = await fetch(`https://graph.facebook.com/me?fields=birthday,gender&access_token=${accessToken}`)
-                    .then((res) => res.json())
-                    .catch(() => ({ dateOfBirth: "Unknown", gender: "Unknown" }));
-
                 const userData = {
-                    name: user.displayName || "Anonymous",
-                    email: user.email || "No Email",
-                    ...additionalData
+                    name: user.displayName || "Unknown",
+                    email: user.email || "Not Available",
+                    profilePicture: user.photoURL || "No Profile Picture"
                 };
 
                 await saveUserToFirestore("users", user.uid, userData);
                 redirectToWelcomePage();
             } catch (error) {
                 console.error("Error during Facebook login:", error);
-                alert(`Facebook login failed: ${error.message}`);
             } finally {
                 setLoading(false);
             }
         });
 
+        // Twitter login
         loginBtnTwitter.addEventListener("click", async () => {
             const provider = new TwitterAuthProvider();
 
@@ -162,7 +166,6 @@
                 redirectToWelcomePage();
             } catch (error) {
                 console.error("Error during Twitter login:", error);
-                alert(`Twitter login failed: ${error.message}`);
             } finally {
                 setLoading(false);
             }
