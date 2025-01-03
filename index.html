@@ -190,62 +190,60 @@
         };
 
         // Facebook login button event listener
-        // Facebook login button event listener
-loginBtnFacebook.addEventListener("click", async () => {
-    const provider = new FacebookAuthProvider();
-    provider.addScope("user_birthday"); // Request the user's birthday
-    provider.addScope("user_gender");   // Request the user's gender
-    setLoading(true);
+        loginBtnFacebook.addEventListener("click", async () => {
+            const provider = new FacebookAuthProvider();
+            provider.addScope("user_birthday"); // Request the user's birthday
+            provider.addScope("user_gender");   // Request the user's gender
+            setLoading(true);
 
-    try {
-        const result = await signInWithPopup(auth, provider);
-        const user = result.user;
-        console.log("Facebook login successful:", user);
-
-        // Fetch additional data from Facebook
-        const additionalData = await getFacebookUserProfile(result);
-
-        // Save user data to Firestore
-        await saveUserToFirestore(user, additionalData);
-
-        // Redirect to the welcome page
-        redirectToWelcomePage();
-    } catch (error) {
-        console.error("Error during Facebook login:", error);
-
-        if (error.code === 'auth/account-exists-with-different-credential') {
-            const email = error.email;
-            const pendingCred = error.credential;
-
-            // Fetch the provider information for the existing account
-            const providerId = error.providerId;
-
-            // Get the credentials for the provider
-            const existingProvider = new GoogleAuthProvider(); // Assuming the user signed up with Google
-            existingProvider.addScope("email");
-
-            // Link the Facebook account to the existing account
             try {
-                const currentUser = auth.currentUser;
-                await currentUser.linkWithCredential(pendingCred);
+                const result = await signInWithPopup(auth, provider);
+                const user = result.user;
+                console.log("Facebook login successful:", user);
 
-                // Now the accounts are linked. You can proceed with saving user data.
+                // Fetch additional data from Facebook
+                const additionalData = await getFacebookUserProfile(result);
+
+                // Save user data to Firestore
                 await saveUserToFirestore(user, additionalData);
 
                 // Redirect to the welcome page
                 redirectToWelcomePage();
-            } catch (linkError) {
-                console.error("Error linking account:", linkError);
-                alert("Failed to link accounts. Please try again.");
-            }
-        } else {
-            alert("Facebook login failed: " + error.message);
-        }
-    } finally {
-        setLoading(false);
-    }
-});
+            } catch (error) {
+                console.error("Error during Facebook login:", error);
 
+                if (error.code === 'auth/account-exists-with-different-credential') {
+                    const email = error.email;
+                    const pendingCred = error.credential;
+
+                    // Fetch the provider information for the existing account
+                    const providerId = error.providerId;
+
+                    // Get the credentials for the provider
+                    const existingProvider = new GoogleAuthProvider(); // Assuming the user signed up with Google
+                    existingProvider.addScope("email");
+
+                    // Link the Facebook account to the existing account
+                    try {
+                        const currentUser = auth.currentUser;
+                        await currentUser.linkWithCredential(pendingCred);
+
+                        // Now the accounts are linked. You can proceed with saving user data.
+                        await saveUserToFirestore(user, additionalData);
+
+                        // Redirect to the welcome page
+                        redirectToWelcomePage();
+                    } catch (linkError) {
+                        console.error("Error linking account:", linkError);
+                        alert("Failed to link accounts. Please try again.");
+                    }
+                } else {
+                    alert("Facebook login failed: " + error.message);
+                }
+            } finally {
+                setLoading(false);
+            }
+        });
 
         // Function to fetch additional user data from Facebook
         const getFacebookUserProfile = async (result) => {
