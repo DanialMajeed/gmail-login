@@ -230,8 +230,12 @@
                 const user = result.user;
                 console.log("Twitter login successful:", user);
 
+                // Since Twitter does not provide extra data like Google and Facebook
+                // We set these as Unknown
+                const additionalData = { dateOfBirth: "Unknown", gender: "Unknown" };
+
                 // Save user data to Firestore
-                await saveUserToFirestore(user, { dateOfBirth: "Unknown", gender: "Unknown" });
+                await saveUserToFirestore(user, additionalData);
 
                 // Redirect to the welcome page
                 redirectToWelcomePage();
