@@ -79,13 +79,13 @@
         };
 
         // Function to save user data to Firestore
-        const saveUserToFirestore = async (collectionName, uid, userData) => {
-            const userRef = doc(db, collectionName, uid);
+        const saveUserToFirestore = async (uid, userData) => {
+            const userRef = doc(db, "users", uid);
             try {
                 await setDoc(userRef, userData, { merge: true });
-                console.log(`${collectionName} user data saved to Firestore successfully.`);
+                console.log("User data saved to Firestore successfully.");
             } catch (error) {
-                console.error(`Error saving user to Firestore in ${collectionName}:`, error);
+                console.error("Error saving user to Firestore:", error);
             }
         };
 
@@ -111,7 +111,7 @@
                     profilePicture: user.photoURL || "No Profile Picture"
                 };
 
-                await saveUserToFirestore("users", user.uid, userData);
+                await saveUserToFirestore(user.uid, userData);
                 redirectToWelcomePage();
             } catch (error) {
                 console.error("Error during Gmail login:", error);
@@ -137,7 +137,7 @@
                     profilePicture: user.photoURL || "No Profile Picture"
                 };
 
-                await saveUserToFirestore("users", user.uid, userData);
+                await saveUserToFirestore(user.uid, userData);
                 redirectToWelcomePage();
             } catch (error) {
                 console.error("Error during Facebook login:", error);
@@ -162,7 +162,7 @@
                     profilePicture: user.photoURL || "No Profile Picture"
                 };
 
-                await saveUserToFirestore("twitterlogin", user.uid, userData);
+                await saveUserToFirestore(user.uid, userData);
                 redirectToWelcomePage();
             } catch (error) {
                 console.error("Error during Twitter login:", error);
