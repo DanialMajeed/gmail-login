@@ -7,7 +7,6 @@
     <script type="module" src="https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js"></script>
     <script type="module" src="https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js"></script>
     <script type="module" src="https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js"></script>
-    <script type="module" src="https://www.gstatic.com/firebasejs/11.1.0/firebase-database.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -45,20 +44,13 @@
             GoogleAuthProvider, 
             FacebookAuthProvider, 
             TwitterAuthProvider, 
-            signInWithPopup, 
-            onAuthStateChanged, 
-            signOut 
+            signInWithPopup 
         } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
         import { 
             getFirestore, 
             doc, 
             setDoc 
         } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
-        import { 
-            getDatabase, 
-            ref, 
-            set 
-        } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-database.js";
 
         // Firebase configuration
         const firebaseConfig = {
@@ -74,7 +66,6 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const realtimeDb = getDatabase(app);
 
         // DOM elements
         const loginBtnGmail = document.getElementById("loginBtnGmail");
@@ -96,15 +87,6 @@
             } catch (error) {
                 console.error("Error saving user to Firestore:", error);
             }
-        };
-
-        // Function to update user status in Realtime Database
-        const updateUserStatusInRealtimeDB = (uid, status) => {
-            const statusRef = ref(realtimeDb, 'users/' + uid);
-            set(statusRef, {
-                status: status,
-                lastLogin: new Date().toISOString() // You can store the last login time
-            });
         };
 
         // Redirect user to welcome.html
@@ -130,7 +112,6 @@
                 };
 
                 await saveUserToFirestore(user.uid, userData);
-                updateUserStatusInRealtimeDB(user.uid, "online");
                 redirectToWelcomePage();
             } catch (error) {
                 console.error("Error during Gmail login:", error);
@@ -157,7 +138,6 @@
                 };
 
                 await saveUserToFirestore(user.uid, userData);
-                updateUserStatusInRealtimeDB(user.uid, "online");
                 redirectToWelcomePage();
             } catch (error) {
                 console.error("Error during Facebook login:", error);
@@ -183,7 +163,6 @@
                 };
 
                 await saveUserToFirestore(user.uid, userData);
-                updateUserStatusInRealtimeDB(user.uid, "online");
                 redirectToWelcomePage();
             } catch (error) {
                 console.error("Error during Twitter login:", error);
@@ -191,25 +170,6 @@
                 setLoading(false);
             }
         });
-
-        // Listen for auth state changes to detect when a user logs out
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                console.log("User logged in: " + user.uid);
-            } else {
-                console.log("No user is signed in.");
-                updateUserStatusInRealtimeDB(user.uid, "offline"); // Set the status to offline on logout
-            }
-        });
-
-        // Sign out function
-        const logout = async () => {
-            try {
-                await signOut(auth);
-            } catch (error) {
-                console.error("Error during logout:", error);
-            }
-        };
     </script>
 </body>
 </html>
