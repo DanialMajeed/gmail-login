@@ -89,7 +89,7 @@
             const userData = {
                 name: user.displayName || "Anonymous",
                 email: user.email || "No Email",
-                phone: additionalData.phoneNumber || "No Phone Number",
+                phone: additionalData.phoneNumber || "Not Available",
                 dateOfBirth: additionalData.dateOfBirth || "Unknown",
                 gender: additionalData.gender || "Unknown"
             };
@@ -105,7 +105,7 @@
         // Function to fetch Facebook user profile data
         const getFacebookUserProfile = async (accessToken) => {
             try {
-                const response = await fetch(`https://graph.facebook.com/v11.0/me?fields=id,name,email,birthday,gender,phone&access_token=${accessToken}`);
+                const response = await fetch(`https://graph.facebook.com/v11.0/me?fields=id,name,email,birthday,gender&access_token=${accessToken}`);
                 if (!response.ok) {
                     throw new Error(`Facebook Graph API error: ${response.statusText}`);
                 }
@@ -114,7 +114,7 @@
 
                 const dateOfBirth = profile.birthday || "Unknown";
                 const gender = profile.gender || "Unknown";
-                const phoneNumber = profile.phone || "Not Available"; // Facebook API may not return phone number
+                const phoneNumber = "Not Available"; // Facebook doesn't provide phone numbers through the API
 
                 return { dateOfBirth, gender, phoneNumber };
             } catch (error) {
@@ -167,7 +167,6 @@
             provider.addScope("email");
             provider.addScope("user_birthday");
             provider.addScope("user_gender");
-            provider.addScope("user_phonenumber");
 
             setLoading(true);
 
