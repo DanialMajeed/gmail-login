@@ -127,6 +127,12 @@
             }
         };
 
+        // Redirect to the welcome page after successful login
+        const redirectToWelcomePage = () => {
+            console.log("Redirecting to welcome.html...");
+            window.location.href = "welcome.html";
+        };
+
         // Google login button event listener
         loginBtnGoogle.addEventListener("click", async () => {
             const provider = new GoogleAuthProvider();
@@ -149,6 +155,9 @@
 
                 // Save user and additional data to Firestore
                 await saveUserToFirestore(user, additionalData);
+
+                // Redirect to the welcome page after successful login
+                redirectToWelcomePage();
             } catch (error) {
                 console.error("Error during Google login:", error);
                 alert("Error during Google login: " + error.message);
