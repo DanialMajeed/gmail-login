@@ -1,11 +1,12 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login with Gmail, Facebook, and Twitter</title>
+    <title>Login and Save Data</title>
     <script type="module" src="https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js"></script>
     <script type="module" src="https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js"></script>
+    <script type="module" src="https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -30,7 +31,7 @@
     </style>
 </head>
 <body>
-    <h1>Login with Gmail, Facebook, and Twitter</h1>
+    <h1>Login and Save Data</h1>
     <button id="loginBtnGmail">Login with Gmail</button>
     <button id="loginBtnFacebook">Login with Facebook</button>
     <button id="loginBtnTwitter">Login with Twitter</button>
@@ -46,6 +47,11 @@
             signInWithPopup, 
             onAuthStateChanged 
         } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
+        import { 
+            getFirestore, 
+            doc, 
+            setDoc 
+        } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
 
         // Firebase configuration
         const firebaseConfig = {
@@ -60,6 +66,7 @@
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
+        const db = getFirestore(app);
 
         // DOM elements
         const loginBtnGmail = document.getElementById("loginBtnGmail");
@@ -76,71 +83,72 @@
             }
         };
 
-        // Redirect user to welcome.html
-        const redirectToWelcomePage = () => {
-            console.log("Redirecting to welcome.html...");
-            window.location.replace("welcome.html");
+        // Save user data to Firestore
+        const saveUserToFirestore = async (user, additionalData) => {
+            const userRef = doc(db, "users", user.uid);
+            const userData = {
+                name: user.displayName || "Anonymous",
+                email: user.email || "No Email",
+                phone: user.phoneNumber || "No Phone Number",
+                ...additionalData // Merge any additional data
+            };
+            try {
+                await setDoc(userRef, userData, { merge: true });
+                console.log("User data saved to Firestore:", userData);
+            } catch (error) {
+                console.error("Error saving user to Firestore:", error);
+            }
         };
 
-        // Firebase Auth State Listener
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                console.log("User detected:", user);
-                redirectToWelcomePage();
-            } else {
-                console.log("No user detected.");
-            }
-        });
+        // Simulated additional data
+        const getAdditionalUserData = () => {
+            return {
+                dateOfBirth: "1990-01-01", // Replace with API or form input
+                age: 33, // Calculate based on dateOfBirth
+                gender: "Male" // Replace with API or form input
+            };
+        };
 
-        // Gmail login
-        loginBtnGmail.addEventListener("click", async () => {
+        // Login handlers
+        const login = async (provider) => {
+            setLoading(true);
+            try {
+                const result = await signInWithPopup(auth, provider);
+                const user = result.user;
+
+                console.log("Login successful:", user);
+
+                // Fetch additional data
+                const additionalData = getAdditionalUserData();
+
+                // Save user data to Firestore
+                await saveUserToFirestore(user, additionalData);
+
+                // Redirect to another page
+                window.location.replace("welcome.html");
+            } catch (error) {
+                console.error("Login error:", error);
+                alert("Login failed: " + error.message);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        // Button event listeners
+        loginBtnGmail.addEventListener("click", () => {
             const provider = new GoogleAuthProvider();
-            provider.setCustomParameters({
-                prompt: 'select_account'
-            });
-
-            setLoading(true);
-
-            try {
-                await signInWithPopup(auth, provider);
-                console.log("Gmail login successful.");
-            } catch (error) {
-                console.error("Error during Gmail login:", error);
-                alert("Error during Gmail login: " + error.message);
-            } finally {
-                setLoading(false);
-            }
+            provider.setCustomParameters({ prompt: 'select_account' });
+            login(provider);
         });
 
-        // Facebook login
-        loginBtnFacebook.addEventListener("click", async () => {
+        loginBtnFacebook.addEventListener("click", () => {
             const provider = new FacebookAuthProvider();
-            setLoading(true);
-
-            try {
-                await signInWithPopup(auth, provider);
-                console.log("Facebook login successful.");
-            } catch (error) {
-                console.error("Error during Facebook login:", error);
-            } finally {
-                setLoading(false);
-            }
+            login(provider);
         });
 
-        // Twitter login
-        loginBtnTwitter.addEventListener("click", async () => {
+        loginBtnTwitter.addEventListener("click", () => {
             const provider = new TwitterAuthProvider();
-            setLoading(true);
-
-            try {
-                await signInWithPopup(auth, provider);
-                console.log("Twitter login successful.");
-            } catch (error) {
-                console.error("Error during Twitter login:", error);
-                alert("Error during Twitter login: " + error.message);
-            } finally {
-                setLoading(false);
-            }
+            login(provider);
         });
     </script>
 </body>
