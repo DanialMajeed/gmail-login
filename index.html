@@ -38,7 +38,6 @@
     <div id="loadingMessage" class="loading">Please wait...</div>
 
     <script type="module">
-        // Import Firebase libraries
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
         import { 
             getAuth, 
@@ -69,10 +68,12 @@
         const db = getFirestore(app);
 
         // DOM elements
+        const loginBtnGmail = document.getElementById("loginBtnGmail");
+        const loginBtnFacebook = document.getElementById("loginBtnFacebook");
         const loginBtnTwitter = document.getElementById("loginBtnTwitter");
         const loadingMessage = document.getElementById("loadingMessage");
 
-        // Function to toggle loading state
+        // Loading toggle function
         const setLoading = (isLoading) => {
             if (isLoading) {
                 loadingMessage.classList.add('active');
@@ -81,7 +82,7 @@
             }
         };
 
-        // Function to save user data to Firestore
+        // Save user data to Firestore
         const saveUserToFirestore = async (collection, user, additionalData) => {
             const userRef = doc(db, collection, user.uid);
             const userData = {
@@ -93,28 +94,72 @@
 
             try {
                 await setDoc(userRef, userData, { merge: true });
-                console.log("User data saved to Firestore successfully.");
+                console.log(`User data saved to Firestore collection '${collection}' successfully.`);
             } catch (error) {
-                console.error("Error saving user to Firestore:", error);
+                console.error(`Error saving user to Firestore collection '${collection}':`, error);
             }
         };
 
-        // Twitter login button event listener
-        loginBtnTwitter.addEventListener("click", async () => {
-            const provider = new TwitterAuthProvider();
-            setLoading(true);
+        // Redirect to welcome page
+        const redirectToWelcomePage = () => {
+            console.log("Redirecting to welcome.html...");
+            window.location.replace("welcome.html");
+        };
 
+        // Google login
+        loginBtnGmail.addEventListener("click", async () => {
+            const provider = new GoogleAuthProvider();
+            provider.addScope("https://www.googleapis.com/auth/userinfo.profile");
+
+            setLoading(true);
             try {
                 const result = await signInWithPopup(auth, provider);
                 const user = result.user;
+                console.log("Google login successful:", user);
 
+                await saveUserToFirestore("users", user, { dateOfBirth: "Unknown", gender: "Unknown" });
+                redirectToWelcomePage();
+            } catch (error) {
+                console.error("Error during Google login:", error);
+                alert("Error during Google login: " + error.message);
+            } finally {
+                setLoading(false);
+            }
+        });
+
+        // Facebook login
+        loginBtnFacebook.addEventListener("click", async () => {
+            const provider = new FacebookAuthProvider();
+            provider.addScope("public_profile");
+
+            setLoading(true);
+            try {
+                const result = await signInWithPopup(auth, provider);
+                const user = result.user;
+                console.log("Facebook login successful:", user);
+
+                await saveUserToFirestore("facebooklogin", user, { dateOfBirth: "Unknown", gender: "Unknown" });
+                redirectToWelcomePage();
+            } catch (error) {
+                console.error("Error during Facebook login:", error);
+                alert("Error during Facebook login: " + error.message);
+            } finally {
+                setLoading(false);
+            }
+        });
+
+        // Twitter login
+        loginBtnTwitter.addEventListener("click", async () => {
+            const provider = new TwitterAuthProvider();
+
+            setLoading(true);
+            try {
+                const result = await signInWithPopup(auth, provider);
+                const user = result.user;
                 console.log("Twitter login successful:", user);
 
-                // Save user data to Firestore
-                const additionalData = { dateOfBirth: "Unknown", gender: "Unknown" };
-                await saveUserToFirestore("twitterlogin", user, additionalData);
-
-                alert("Twitter login successful!");
+                await saveUserToFirestore("twitterlogin", user, { dateOfBirth: "Unknown", gender: "Unknown" });
+                redirectToWelcomePage();
             } catch (error) {
                 console.error("Error during Twitter login:", error);
                 alert("Error during Twitter login: " + error.message);
